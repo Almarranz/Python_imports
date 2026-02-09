@@ -9,7 +9,6 @@ def region(table, coor1, coor2,
                      marker='cross'):
 """
 
-import os
 
 def region(table, coor1, coor2,
                      name='regions',
@@ -17,6 +16,10 @@ def region(table, coor1, coor2,
                      color='green',
                      wcs='fk5',
                      marker='cross'):
+    
+    import os
+    import astropy.units as u
+
     """
     Writes a DS9 region file from a catalog containing RA/Dec coordinates.
 
@@ -62,16 +65,27 @@ def region(table, coor1, coor2,
             regfile.write(f'{wcs}\n')
 
         # Write all points
-
-        if marker == 'circulos':        
-            for ra, dec in zip(table[coor1], table[coor2]):
-                regfile.write(f'circle({ra},{dec}, 100")\n')
-            for ra, dec in zip(table[coor1], table[coor2]):
-                regfile.write(f'point({ra},{dec}) # point= cross\n')
-                
-        else:
-            for ra, dec in zip(table[coor1], table[coor2]):
-                regfile.write(f'point({ra},{dec}) # point={marker}\n')
+        if table['l'].unit == u.deg:
+        
+            if marker == 'circulos':        
+                for ra, dec in zip(table[coor1].value, table[coor2].value):
+                    regfile.write(f'circle({ra},{dec}, 100")\n')
+                for ra, dec in zip(table[coor1].value, table[coor2].value):
+                    regfile.write(f'point({ra},{dec}) # point= cross\n')
+                    
+            else:
+                for ra, dec in zip(table[coor1], table[coor2]):
+                    regfile.write(f'point({ra},{dec}) # point={marker}\n')
+        else: 
+            if marker == 'circulos':        
+                for ra, dec in zip(table[coor1].value, table[coor2].value):
+                    regfile.write(f'circle({ra},{dec}, 100")\n')
+                for ra, dec in zip(table[coor1], table[coor2]):
+                    regfile.write(f'point({ra},{dec}) # point= cross\n')
+                    
+            else:
+                for ra, dec in zip(table[coor1], table[coor2]):
+                    regfile.write(f'point({ra},{dec}) # point={marker}\n')
 
     print(f"DS9 region file saved to: {filepath}")
 
