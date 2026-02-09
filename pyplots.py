@@ -15,9 +15,9 @@ def l_function(table, band, b_with, m_l = None, m_h = None, min_counts = None):
     if m_l == None:
         m_l = np.min(table[band])
         m_h = np.max(table[band])
-    num_bins = np.arange(m_l, m_h ,b_with )
+    num_bins = np.arange(m_l.value, m_h.value ,b_with )
     # Create the histogram
-    mag = table[band]
+    mag = table[band].value
     counts, bin_edges = np.histogram(mag, bins=num_bins)
     
     if min_counts is None:
