@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan 30 13:06:23 2026
-
-@author: amartinez
+def region(table, coor1, coor2,
+                     name='regions',
+                     save_in='.',
+                     color='green',
+                     wcs='fk5',
+                     marker='cross'):
 """
 
 import os
@@ -60,7 +63,7 @@ def region(table, coor1, coor2,
 
         # Write all points
 
-        if marker == 'circle':        
+        if marker == 'circulos':        
             for ra, dec in zip(table[coor1], table[coor2]):
                 regfile.write(f'circle({ra},{dec}, 100")\n')
             for ra, dec in zip(table[coor1], table[coor2]):

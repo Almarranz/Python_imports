@@ -24,6 +24,7 @@ from astropy import wcs
 from astropy.wcs import WCS
 import alphashape
 from astropy.table import Table
+from astropy.coordinates import Longitude
 # import species
 # %%plotting pa    metres
 from matplotlib import rc
@@ -63,7 +64,6 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
     Dec = table[coor2]
     color_A = table[mag_A]
     color_B = table[mag_B]
-    print(Ra,Dec)
     
     clus_dic = {}
     
@@ -243,23 +243,25 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
     ms_size, ms_color = 100, '#1f77b4'
     if len(set(l)) > 1:
         for i in range(len(set(l))-1):
-            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-
-            ax.hist(d_KNN, bins='auto', histtype='step', color='k')
-            ax.hist(d_KNN_sim, bins='auto', histtype='step', color='r')
-            ax.set_xlabel('%s-NN distance' % (samples_dist))
-
-            texto = '\n'.join(('min real d_KNN = %s' % (round(min(d_KNN), 3)),
-                               'limit set for sim d_KNN =%s' % (
-                                   round(valor, 3)),
-                               'average = %s' % (eps_av), '%s' % (sim_lim), '%s' % (gen_sim), clustered_by))
-
-            props = dict(boxstyle='round', facecolor='w', alpha=0.5)
-            # place a text box in upper left in axes coords
-            ax.text(0.25, 0.50, texto, transform=ax.transAxes, fontsize=20,
-                    verticalalignment='top', bbox=props)
-
-            ax.set_ylabel('N')
+# =============================================================================
+#             fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+# 
+#             ax.hist(d_KNN, bins='auto', histtype='step', color='k')
+#             ax.hist(d_KNN_sim, bins='auto', histtype='step', color='r')
+#             ax.set_xlabel('%s-NN distance' % (samples_dist))
+# 
+#             texto = '\n'.join(('min real d_KNN = %s' % (round(min(d_KNN), 3)),
+#                                'limit set for sim d_KNN =%s' % (
+#                                    round(valor, 3)),
+#                                'average = %s' % (eps_av), '%s' % (sim_lim), '%s' % (gen_sim), clustered_by))
+# 
+#             props = dict(boxstyle='round', facecolor='w', alpha=0.5)
+#             # place a text box in upper left in axes coords
+#             ax.text(0.25, 0.50, texto, transform=ax.transAxes, fontsize=20,
+#                     verticalalignment='top', bbox=props)
+# 
+#             ax.set_ylabel('N')
+# =============================================================================
             if 'color' in clustered_by:
                 fig, ax = plt.subplots(1, 3, figsize=(30, 10))
             else:
@@ -336,10 +338,11 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
             # all_mag_clus = arches_dbs['F153M']
             
             if coor1 == 'l':
-                clus_cent = SkyCoord(ra = [np.median(Ra[colores_index[i]])], dec =[ np.median(Dec[colores_index[i]])], unit='degree')
-                clus_coord = SkyCoord(ea=Ra[colores_index[i]], dec=Dec[colores_index[i]], unit='degree')
+                coor_w = Longitude(Ra, u.deg).wrap_at('180d')
+                clus_cent = SkyCoord(l = [np.median(Ra[colores_index[i]])], b =[ np.median(Dec[colores_index[i]])], unit='degree', frame = 'galactic')
+                clus_coord = SkyCoord(l = Ra[colores_index[i]], b = Dec[colores_index[i]], unit='degree', frame = 'galactic')
                 clus_mag = color_B[colores_index[i]]
-                m_point = SkyCoord(ra=[np.mean(c2.ra)], dec=[np.mean(c2.dec)])
+                m_point = SkyCoord(l = [np.mean(c2.l)], b = [np.mean(c2.b)], frame = 'galactic')
 
                 
             else:
@@ -370,7 +373,7 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
 
            
             ax[1].axis('equal')
-            ax[1].scatter(Ra[group_md], Dec[group_md], color=gr_color,
+            ax[1].scatter(coor_w[group_md], Dec[group_md], color=gr_color,
                           s=gr_size, zorder=1, marker='x', alpha=gr_alpha)
             ax[0].scatter(X[:, 0][group_md], X[:, 1][group_md], color=gr_color,
                           s=gr_size, zorder=1, marker='x', alpha=1)
@@ -380,21 +383,34 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
             #                         verticalalignment='top', bbox=prop)
             # ax[1].text(0.05, 0.15, 'Radius $\sim$ %.0f"\n # stars = %s '%(rad.to(u.arcsec).value,len(colores_index[i][0])), transform=ax[1].transAxes, fontsize=30,
             #                         verticalalignment='top', bbox=prop)
-            ax[1].text(0.20, 0.95, 'Radius $\sim$ %.0f"\n # stars = %s\n l = %.3f b = %.3f ' % (rad.to(u.arcsec).value, len(colores_index[i][0]),clus_cent.ra.value,clus_cent.dec.value), transform=ax[1].transAxes, fontsize=30,
+            
+            if coor1 == 'l':
+                ax[1].text(0.20, 0.95, 'Radius $\sim$ %.0f"\n # stars = %s\n l = %.3f b = %.3f ' % (rad.to(u.arcsec).value, len(colores_index[i][0]),clus_cent.l.value,clus_cent.b.value), transform=ax[1].transAxes, fontsize=30,
                        verticalalignment='top', bbox=prop)
+                
+                # l_wr = Longitude(l, u.deg).wrap_at(180*u.deg).degree  # wrap data at 180°
+               
+                ax[1].scatter(coor_w, Dec, color=colors[-1], s=50,
+                              zorder=1, alpha=bg_alpha)  # plots in galactic
+                
+                ax[1].scatter(coor_w[colores_index[i]].wrap_at('180d'), Dec[colores_index[i]], color=color_de_cluster,
+                              s=cl_size, zorder=2, edgecolor='k')  # plots in galactic
+
+
+            else:
+                ax[1].text(0.20, 0.95, 'Radius $\sim$ %.0f"\n # stars = %s\n l = %.3f b = %.3f ' % (rad.to(u.arcsec).value, len(colores_index[i][0]),clus_cent.ra.value,clus_cent.dec.value), transform=ax[1].transAxes, fontsize=30,
+                       verticalalignment='top', bbox=prop)
+                ax[1].scatter(Ra, Dec, color=colors[-1], s=50,
+                              zorder=1, alpha=bg_alpha)  # plots in galactic
+                ax[1].scatter(Ra[colores_index[i]], Dec[colores_index[i]], color=color_de_cluster,
+                              s=cl_size, zorder=2, edgecolor='k')  # plots in galactic
 
             
 
-            ax[1].scatter(Ra, Dec, color=colors[-1], s=50,
-                          zorder=1, alpha=bg_alpha)  # plots in galactic
+            
+            
             
             ax[1].invert_xaxis()
-
-          
-
-            ax[1].scatter(Ra[colores_index[i]], Dec[colores_index[i]], color=color_de_cluster,
-                          s=cl_size, zorder=2, edgecolor='k')  # plots in galactic
-           
             ax[1].set_xlabel('l', fontsize=30)
             ax[1].set_ylabel('b', fontsize=30)
             # ax[1].yaxis.set_label_coords(-.05, .58)
@@ -462,16 +478,16 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
                 
                 ax[2].text(0.50, 0.95, txt_color, transform=ax[2].transAxes, fontsize=30,
                                        verticalalignment='top', bbox=props)
-            clus_dic[f'clus_{i}'] = Table({
-                    'RA': Ra[colores_index[i]],
-                    'Dec': Dec[colores_index[i]],
-                    'x': X[:, 2][colores_index[i]],
-                    'y': X[:, 3][colores_index[i]],
-                    'pm_x': X[:, 0][colores_index[i]],
-                    'pm_y': X[:, 1][colores_index[i]],
-                    'color_A': color_A[colores_index[i]],
-                    'color_B': color_B[colores_index[i]],
-                    })
+            # clus_dic[f'clus_{i}'] = Table({
+            #         'RA': Ra[colores_index[i]],
+            #         'Dec': Dec[colores_index[i]],
+            #         'x': X[:, 2][colores_index[i]],
+            #         'y': X[:, 3][colores_index[i]],
+            #         'pm_x': X[:, 0][colores_index[i]],
+            #         'pm_y': X[:, 1][colores_index[i]],
+            #         'color_A': color_A[colores_index[i]],
+            #         'color_B': color_B[colores_index[i]],
+            #         })
             
             clus_dic[f'clus_{i}'] = table[colores_index[i]]
             

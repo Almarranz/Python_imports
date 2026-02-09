@@ -10,6 +10,28 @@ from astropy.stats import sigma_clip
 import matplotlib.pyplot as plt
 import numpy as np
 
+def l_function(table, band, b_with, m_l = None, m_h = None, min_counts = None):
+    
+    if m_l == None:
+        m_l = np.min(table[band])
+        m_h = np.max(table[band])
+    num_bins = np.arange(m_l, m_h ,b_with )
+    # Create the histogram
+    mag = table[band]
+    counts, bin_edges = np.histogram(mag, bins=num_bins)
+    
+    if min_counts is None:
+        min_counts = 1
+    c_mask = counts > min_counts
+
+    bins = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+    counts = counts[c_mask]
+    bins = bins[c_mask]
+    
+    return bins, counts
+
+
 def plot_two_pm_hists(table, var1, var2, sym1, sym2, *,
                       bins=50, figsize=(8,4), title1 = None,  title2 = None):
     """
