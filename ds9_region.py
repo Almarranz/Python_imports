@@ -74,11 +74,11 @@ def region(table, coor1, coor2,
                     regfile.write(f'point({ra},{dec}) # point= cross\n')
                     
             else:
-                for ra, dec in zip(table[coor1], table[coor2]):
+                for ra, dec in zip(table[coor1].value, table[coor2].value):
                     regfile.write(f'point({ra},{dec}) # point={marker}\n')
         else: 
             if marker == 'circulos':        
-                for ra, dec in zip(table[coor1].value, table[coor2].value):
+                for ra, dec in zip(table[coor1], table[coor2]):
                     regfile.write(f'circle({ra},{dec}, 100")\n')
                 for ra, dec in zip(table[coor1], table[coor2]):
                     regfile.write(f'point({ra},{dec}) # point= cross\n')
