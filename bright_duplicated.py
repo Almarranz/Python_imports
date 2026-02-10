@@ -42,7 +42,10 @@ def bright_dup(table, coord, band, mag_lim, sep_lim):
     
     
 # 1. Select bright stars
-    bright_mask = table[band] < mag_lim
+    if table[band].unit.is_equivalent(u.mag):
+        bright_mask = table[band].value < mag_lim    
+    else:
+        bright_mask = table[band] < mag_lim
     bright_coords = coord[bright_mask]
     
     # 2. Search for all pairs of bright stars within a distance
