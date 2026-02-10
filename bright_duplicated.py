@@ -30,12 +30,15 @@ Created on Sat Feb  7 15:05:28 2026
  
      
  """
-import numpy as np
-from astropy import units as u
-from astropy.coordinates import search_around_sky
 
 
 def bright_dup(table, coord, band, mag_lim, sep_lim):
+    
+    import numpy as np
+    from astropy import units as u
+    from astropy.coordinates import search_around_sky
+
+    
     
     
 # 1. Select bright stars
