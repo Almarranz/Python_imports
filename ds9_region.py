@@ -65,7 +65,7 @@ def region(table, coor1, coor2,
             regfile.write(f'{wcs}\n')
 
         # Write all points
-        if table['l'].unit == u.deg:
+        if table['l'].unit.is_equivalent(u.deg):
         
             if marker == 'circulos':        
                 for ra, dec in zip(table[coor1].value, table[coor2].value):
