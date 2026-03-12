@@ -288,4 +288,50 @@ def filter_virac2_data(table,
     return table[mask]
 
     
+def filter_hst_data(table,
+                      max_e_pos = None,
+                      max_e_pm = None,
+                      min_mag = None,
+                      max_mag = None,
+                      ):
+
+    mask = np.ones(len(table), dtype=bool)
     
+    if max_e_pos is not None:
+        mask &= (table['sxy'] < max_e_pos) 
+    
+    if min_mag is not None:
+        mask &= (table['H'] < min_mag) 
+    
+    if max_mag is not None:
+        mask &= (table['H'] > max_mag) 
+        
+    if max_e_pm is not None:
+        # mask &= (table['dpm_x'] < max_e_pm) & (table['dpm_y'] < max_e_pm)
+        mask &= np.sqrt(table['dpm_x']**2 + table['dpm_y']**2) < max_e_pm
+
+    return table[mask]
+
+def filter_naco_data(table,
+                      max_e_pos = None,
+                      max_e_pm = None,
+                      min_mag = None,
+                      max_mag = None,
+                      ):
+
+    mask = np.ones(len(table), dtype=bool)
+    
+    if max_e_pos is not None:
+        mask &= (table['dxy'] < max_e_pos) 
+    
+    if min_mag is not None:
+        mask &= (table['IB244'] < min_mag) 
+    
+    if max_mag is not None:
+        mask &= (table['IB244'] > max_mag) 
+        
+    if max_e_pm is not None:
+        # mask &= (table['dpm_x'] < max_e_pm) & (table['dpm_y'] < max_e_pm)
+        mask &= np.sqrt(table['dpm_x']**2 + table['dpm_y']**2) < max_e_pm
+
+    return table[mask]

@@ -44,14 +44,12 @@ from matplotlib.colors import LogNorm
      aligned gns_A table
  """
 
-def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H, grid_s = None, grid_Hmin = None, grid_Hmax = None,isolation_radius = None,dm_plots = None, f_mode = None, mag_lim_alig = None, mag_name = None  ) :
+def alig_gaia(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop, grid_s = None, grid_Hmin = None, grid_Hmax = None,isolation_radius = None,dm_plots = None, f_mode = None, mag_lim_alig = None  ) :
     loop = 0
     deg = 1
     # max_loop= 10
-    sig_cl = sig_cl_H
+    
     comom_ls = []
-    if mag_name is None:
-        
    
     if mag_lim_alig is not None:
         
@@ -67,25 +65,7 @@ def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H, gr
         # ax.hist2d(l2_clip['x'], l2_clip['y'],bins = 100, norm = LogNorm())
  
    
-    if grid_s is not None:
-        # def grid_stars(table, x_col, y_col, mag_col, mag_min, mag_max, grid_size=50, isolation_radius=0.5):
-        gns2_g, x_ed, y_ed = grid_stars(gns_B,col1,col2,'H',grid_Hmin,grid_Hmax,cell_size=grid_s,isolation_radius = isolation_radius)
-        
-        fig, ax = plt.subplots(1,1)
-        ax.set_title(f'Grid stars {len (gns2_g)}. G_size = {x_ed[2] - x_ed[1]: .1f} x {y_ed[2] - y_ed[1]: .1f}  arsec')
-        # hsg = ax.hist2d(gns2_g[col1], gns2_g[col2],bins = int(grid_s/3), norm = LogNorm(), cmap = 'gray')
-        # hsg = ax.hist2d(gns2_g[col1], gns2_g[col2],bins = int(grid_s/5), cmap = 'gray')
-        # hsg = ax.hist2d(gns2_g[col1], gns2_g[col2],bins = (int(grid_s),int(grid_s/2)), cmap = 'gray')
-        ax.scatter(gns2_g[col1], gns2_g[col2],s =3,color = 'red', label = 'Grid stars')
-        ax.invert_xaxis()
-        ax.axis('equal')
-        # fig.colorbar(hsg[3], ax = ax, label = 'Stars/bin')
-        # sys.exit(74)
-       
-        
-        l2_xy = np.array([gns2_g[col1],gns2_g[col2]]).T
-    else:
-        l2_xy = np.array([gns_B[col1],gns_B[col2]]).T
+    l2_xy = np.array([gns_B[col1],gns_B[col2]]).T
         
    
     
@@ -111,47 +91,20 @@ def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H, gr
     
         l1_com = gns_A[comp['ind_1']]
        
-        
-        if grid_s is not None:
-            l2_com = gns2_g[comp['ind_2']]
-        else:
-            l2_com = gns_B[comp['ind_2']]
+       
+        l2_com = gns_B[comp['ind_2']]
         
         
-        # l2_clip = l2_com
-        # l1_clip = l1_com
+        l2_clip = l2_com
+        l1_clip = l1_com
         
-        diff_mag = l1_com['H'] - l2_com['H'] 
-        # diff_mag1 = l1_com['IB230_diff'] - l2_com['IB230_diff'] 
-        diff_x =  l2_com['x'] - l1_com['x'] 
-        diff_y =  l2_com['y'] - l1_com['y'] 
-        diff_xy = (diff_x**2 + diff_y**2)**0.5
-        mask_m, l_lim,h_lim = sigma_clip(diff_mag, sigma=sig_cl, masked = True, return_bounds= True)
         
-        l1_clip = l1_com[np.logical_not(mask_m.mask)]
-        l2_clip = l2_com[np.logical_not(mask_m.mask)]
-        
+       
+       
 
         
         # sys.exit(126)
         
-        
-        if dm_plots == 'yes':
-    # =============================================================================
-            fig, (ax,ax1) = plt.subplots(1,2)
-            fig.suptitle(f'Degree = {deg}. Loop = {loop}')
-            ax.set_xlabel('$\Delta$ H')
-            ax.hist(diff_mag,bins ='auto', label = 'matches = %s\ndist = %.2f arcsec'%(len(comp['ind_1']), d_m))
-            ax.axvline(l_lim, color = 'red', ls = 'dashed', label = '$\pm$%s$\sigma$'%(sig_cl))
-            ax.axvline(h_lim, color = 'red', ls = 'dashed')
-            ax.legend()
-            
-            ax1.hist(diff_x, label = '$\overline{\Delta x} = %.2f\pm%.2f$'%(np.mean(diff_x),np.std(diff_x)), histtype = 'step')
-            ax1.hist(diff_y, label = '$\overline{\Delta y} = %.2f\pm%.2f$'%(np.mean(diff_y),np.std(diff_y)), histtype = 'step')
-        
-            ax1.set_xlabel('$\Delta$ pixel')
-            ax1.legend()
-    # =============================================================================
         
         
         
