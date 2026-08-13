@@ -15,7 +15,8 @@ def region(table, coor1, coor2,
                      save_in='.',
                      color='green',
                      wcs='fk5',
-                     marker='cross'):
+                     marker='cross',
+                     radio = None):
     
     import os
     import astropy.units as u
@@ -65,12 +66,13 @@ def region(table, coor1, coor2,
             regfile.write(f'{wcs}\n')
         
         unidades = table[coor1].unit
+        # unidades = None
         # Write all points
         if unidades is not None:
         
             if marker == 'circulos':        
                 for ra, dec in zip(table[coor1].value, table[coor2].value):
-                    regfile.write(f'circle({ra},{dec}, 100")\n')
+                    regfile.write(f'circle({ra},{dec}, {radio}")\n')
                 for ra, dec in zip(table[coor1].value, table[coor2].value):
                     regfile.write(f'point({ra},{dec}) # point= cross\n')
                     
@@ -80,7 +82,7 @@ def region(table, coor1, coor2,
         else: 
             if marker == 'circulos':        
                 for ra, dec in zip(table[coor1], table[coor2]):
-                    regfile.write(f'circle({ra},{dec}, 100")\n')
+                    regfile.write(f'circle({ra},{dec}, {radio}")\n')
                 for ra, dec in zip(table[coor1], table[coor2]):
                     regfile.write(f'point({ra},{dec}) # point= cross\n')
                     
@@ -163,9 +165,15 @@ def region_vectors(table,
         # Compute angle using atan2
         # atan2(y, x) = atan(PMDEC/PMRA) automatically handles quadrants
         angle_deg = np.degrees(np.arctan2(PMDEC, PMRA))
-
+        
+        print(RA,DEC, length, angle_deg)
         # Write each vector
         for ra, dec, L, ang in zip(RA, DEC, length, angle_deg):
-            regfile.write(f'# vector({ra},{dec},{L}\",{ang}) vector=1 width={width}\n')
+            if wcs == 'physical':
+                regfile.write(f'# vector({ra},{dec},{L},{ang}) vector=1 width={width}\n')
+            
+            else:
+                regfile.write(f'# vector({ra},{dec},{L}\",{ang}) vector=1 width={width}\n')
+            
 
     print(f"DS9 vector region file saved to: {filepath}")

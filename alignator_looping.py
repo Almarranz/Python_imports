@@ -44,18 +44,21 @@ from matplotlib.colors import LogNorm
      aligned gns_A table
  """
 
-def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H, grid_s = None, grid_Hmin = None, grid_Hmax = None,isolation_radius = None,dm_plots = None, f_mode = None, mag_lim_alig = None, mag_name = None  ) :
+def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H = None, grid_s = None, grid_Hmin = None, grid_Hmax = None,isolation_radius = None,dm_plots = None, f_mode = None, mag_lim_alig = None, mag_name = None  ) :
     loop = 0
     deg = 1
     # max_loop= 10
     sig_cl = sig_cl_H
     comom_ls = []
-    if mag_name is None:
+    if mag_name is not None:
+        mag = mag_name
+    else:
+        mag = 'H'
         
    
     if mag_lim_alig is not None:
         
-        mask_H = (gns_B['H'] < mag_lim_alig[1]) & (gns_B['H'] > mag_lim_alig[0])
+        mask_H = (gns_B[mag] < mag_lim_alig[1]) & (gns_B[mag] > mag_lim_alig[0])
         gns_B = gns_B[mask_H]
         
     
@@ -69,7 +72,7 @@ def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H, gr
    
     if grid_s is not None:
         # def grid_stars(table, x_col, y_col, mag_col, mag_min, mag_max, grid_size=50, isolation_radius=0.5):
-        gns2_g, x_ed, y_ed = grid_stars(gns_B,col1,col2,'H',grid_Hmin,grid_Hmax,cell_size=grid_s,isolation_radius = isolation_radius)
+        gns2_g, x_ed, y_ed = grid_stars(gns_B,col1,col2,mag,grid_Hmin,grid_Hmax,cell_size=grid_s,isolation_radius = isolation_radius)
         
         fig, ax = plt.subplots(1,1)
         ax.set_title(f'Grid stars {len (gns2_g)}. G_size = {x_ed[2] - x_ed[1]: .1f} x {y_ed[2] - y_ed[1]: .1f}  arsec')
@@ -118,42 +121,46 @@ def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H, gr
             l2_com = gns_B[comp['ind_2']]
         
         
-        # l2_clip = l2_com
-        # l1_clip = l1_com
         
-        diff_mag = l1_com['H'] - l2_com['H'] 
-        # diff_mag1 = l1_com['IB230_diff'] - l2_com['IB230_diff'] 
-        diff_x =  l2_com['x'] - l1_com['x'] 
-        diff_y =  l2_com['y'] - l1_com['y'] 
-        diff_xy = (diff_x**2 + diff_y**2)**0.5
-        mask_m, l_lim,h_lim = sigma_clip(diff_mag, sigma=sig_cl, masked = True, return_bounds= True)
+       
         
-        l1_clip = l1_com[np.logical_not(mask_m.mask)]
-        l2_clip = l2_com[np.logical_not(mask_m.mask)]
-        
-
-        
-        # sys.exit(126)
-        
-        
-        if dm_plots == 'yes':
-    # =============================================================================
-            fig, (ax,ax1) = plt.subplots(1,2)
-            fig.suptitle(f'Degree = {deg}. Loop = {loop}')
-            ax.set_xlabel('$\Delta$ H')
-            ax.hist(diff_mag,bins ='auto', label = 'matches = %s\ndist = %.2f arcsec'%(len(comp['ind_1']), d_m))
-            ax.axvline(l_lim, color = 'red', ls = 'dashed', label = '$\pm$%s$\sigma$'%(sig_cl))
-            ax.axvline(h_lim, color = 'red', ls = 'dashed')
-            ax.legend()
+        if sig_cl_H is not None:
+            diff_mag = l1_com[mag] - l2_com[mag] 
+            # diff_mag1 = l1_com['IB230_diff'] - l2_com['IB230_diff'] 
+            diff_x =  l2_com['x'] - l1_com['x'] 
+            diff_y =  l2_com['y'] - l1_com['y'] 
+            diff_xy = (diff_x**2 + diff_y**2)**0.5
+            mask_m, l_lim,h_lim = sigma_clip(diff_mag, sigma=sig_cl, masked = True, return_bounds= True)
             
-            ax1.hist(diff_x, label = '$\overline{\Delta x} = %.2f\pm%.2f$'%(np.mean(diff_x),np.std(diff_x)), histtype = 'step')
-            ax1.hist(diff_y, label = '$\overline{\Delta y} = %.2f\pm%.2f$'%(np.mean(diff_y),np.std(diff_y)), histtype = 'step')
+            l1_clip = l1_com[np.logical_not(mask_m.mask)]
+            l2_clip = l2_com[np.logical_not(mask_m.mask)]
+            
+    
+            
+            # sys.exit(126)
+            
+            
+            if dm_plots == 'yes':
+        # =============================================================================
+                fig, (ax,ax1) = plt.subplots(1,2)
+                fig.suptitle(f'Degree = {deg}. Loop = {loop}')
+                ax.set_xlabel('$\Delta$ H')
+                ax.hist(diff_mag,bins ='auto', label = 'matches = %s\ndist = %.2f arcsec'%(len(comp['ind_1']), d_m))
+                ax.axvline(l_lim, color = 'red', ls = 'dashed', label = '$\pm$%s$\sigma$'%(sig_cl))
+                ax.axvline(h_lim, color = 'red', ls = 'dashed')
+                ax.legend()
+                
+                ax1.hist(diff_x, label = '$\overline{\Delta x} = %.2f\pm%.2f$'%(np.mean(diff_x),np.std(diff_x)), histtype = 'step')
+                ax1.hist(diff_y, label = '$\overline{\Delta y} = %.2f\pm%.2f$'%(np.mean(diff_y),np.std(diff_y)), histtype = 'step')
+            
+                ax1.set_xlabel('$\Delta$ pixel')
+                ax1.legend()
+        # =============================================================================
         
-            ax1.set_xlabel('$\Delta$ pixel')
-            ax1.legend()
-    # =============================================================================
-        
-        
+        else:
+            
+            l2_clip = l2_com
+            l1_clip = l1_com
         
         
         xy_1c = np.array([l1_clip[col1],l1_clip[col2]]).T

@@ -17,6 +17,15 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy import units as u 
 from astropy.table import vstack
+from astropy.stats import sigma_clip
+
+
+def sig_cl(x, y,s):
+    mx, lx, hx = sigma_clip(x , sigma = s, masked = True, return_bounds= True)
+    my, ly, hy = sigma_clip(y , sigma = s, masked = True, return_bounds= True)
+    m_xy = np.logical_and(np.logical_not(mx.mask),np.logical_not(my.mask))
+    
+    return m_xy, [lx,hx,ly,hy]
 
 def filter_gaia_data(gaia_table, 
                      astrometric_params_solved=None, 
@@ -132,21 +141,25 @@ def filter_gns_data(gns_table,
                       max_e_pm = None,
                       min_mag = None,
                       max_mag = None,
-                      ):
+                      band = None):
 
+    if band is not None:
+        band = band
+    else:
+        band = 'H'
     mask = np.ones(len(gns_table), dtype=bool)
     
     if max_e_pos is not None:
-        mask &= (gns_table['sl'] < max_e_pos) & (gns_table['sb'] < max_e_pos) 
+        mask &= np.sqrt((gns_table['sl'])**2 +  (gns_table['sb']**2)) < max_e_pos 
     
     if min_mag is not None:
-        mask &= (gns_table['H'] < min_mag) 
+        mask &= (gns_table[band] < min_mag) 
     
     if max_mag is not None:
-        mask &= (gns_table['H'] > max_mag) 
+        mask &= (gns_table[band] > max_mag) 
         
     if max_e_pm is not None:
-        mask &= (gns_table['dpm_x'] < max_e_pm) & (gns_table['dpm_y'] < max_e_pm)
+        mask &= np.sqrt((gns_table['dpm_x']**2) + (gns_table['dpm_y']**2)) < max_e_pm
 
     return gns_table[mask]
 
