@@ -44,7 +44,7 @@ from matplotlib.colors import LogNorm
      aligned gns_A table
  """
 
-def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H = None, grid_s = None, grid_Hmin = None, grid_Hmax = None,isolation_radius = None,dm_plots = None, f_mode = None, mag_lim_alig = None, mag_name = None  ) :
+def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop, center_only_align = None,sig_cl_H = None, grid_s = None, grid_Hmin = None, grid_Hmax = None,isolation_radius = None,dm_plots = None, f_mode = None, mag_lim_alig = None, mag_name = None  ) :
     loop = 0
     deg = 1
     # max_loop= 10
@@ -135,8 +135,11 @@ def alg_loop(gns_A, gns_B,col1, col2, align_by,max_deg,d_m,max_loop,sig_cl_H = N
             l1_clip = l1_com[np.logical_not(mask_m.mask)]
             l2_clip = l2_com[np.logical_not(mask_m.mask)]
             
-    
+        if center_only_align is not None:
             
+            center_m = (l1_com['H'] - l1_com['Ks']) > 1.3
+            l1_clip = l1_com[center_m]
+            l2_clip = l2_com[center_m]
             # sys.exit(126)
             
             

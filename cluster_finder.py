@@ -5,11 +5,15 @@ Created on Thu May 25 13:18:16 2023
 
 @author: amartinez
 """
+import sys
+sys.path.append("/Users/amartinez/Desktop/pythons_imports/")
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-import sys
+from ds9_region import region_vectors
+from ds9_region import region
+
 from astropy.table import Table
 from scipy.stats import gaussian_kde
 from sklearn.cluster import DBSCAN
@@ -246,8 +250,8 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
     if len(set(l)) > 1:
         for i in range(len(set(l))-1):
            
-            # if len(colores_index[i][0]) > samples_dist:
-            if len(colores_index[i][0]) > 0:
+            if len(colores_index[i][0]) > samples_dist:
+            # if len(colores_index[i][0]) > 0:
     # =============================================================================
     #             fig, ax = plt.subplots(1, 1, figsize=(10, 10))
     # 
@@ -285,9 +289,9 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
                 #               color=colors[-1], s=50, zorder=1, alpha=bg_alpha)
                 
                 ax[0].hexbin(X[:, 0][colores_index[-1]], X[:, 1][colores_index[-1]],
-                              norm = LogNorm(), gridsize = (20,20), cmap = 'Greys')
+                              norm = LogNorm(), gridsize = (50,50), cmap = 'Greys', edgecolor = 'grey')
     
-                ax[0].scatter(X[:, 0], X[:, 1], color=colors[-1], s=50, zorder=1)
+                # ax[0].scatter(X[:, 0], X[:, 1], color=colors[-1], s=50, zorder=1)
                 # ax[1].quiver(t_gal['l'][colores_index[-1]].value,t_gal['b'][colores_index[-1]].value, X[:,0][colores_index[-1]]-pms[2], X[:,1][colores_index[-1]]-pms[3], alpha=0.5, color=colors[-1])
     
                 ax[0].scatter(X[:, 0][colores_index[i]], X[:, 1][colores_index[i]],
@@ -403,7 +407,9 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
                     
                     # l_wr = Longitude(l, u.deg).wrap_at(180*u.deg).degree  # wrap data at 180°
                    
-                    ax[1].scatter(coor_w, Dec, color=colors[-1], s=50,
+                    # ax[1].scatter(coor_w, Dec, color=colors[-1], s=50,
+                    #               zorder=1, alpha=bg_alpha)  # plots in galactic
+                    ax[1].hexbin(coor_w, Dec, color=colors[-1], cmap = 'Greys', norm = LogNorm(), gridsize = (34,20),
                                   zorder=1, alpha=bg_alpha)  # plots in galactic
                     
                     ax[1].scatter(coor_w[colores_index[i]].wrap_at('180d'), Dec[colores_index[i]], color=color_de_cluster,
@@ -415,7 +421,7 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
                            verticalalignment='top', bbox=prop)
                     # ax[1].scatter(Ra, Dec, color=colors[-1], s=50,
                                   # zorder=1, alpha=bg_alpha)  
-                    ax[1].hexbin(Ra, Dec, zorder =1, norm = LogNorm(), gridsize = (20,20),
+                    ax[1].hexbin(Ra, Dec, zorder =1, norm = LogNorm(), gridsize = (34,20),
                                  cmap = 'Greys', )    
                     ax[1].scatter(Ra[colores_index[i]], Dec[colores_index[i]], color=color_de_cluster,
                                   s=cl_size, zorder=2, edgecolor='k')  # plots in galactic
@@ -436,25 +442,44 @@ def finder(table, pmx, pmy, pixel_x, pixel_y, coor1, coor2, clustered_by, mag_A,
                 plt.savefig('/Users/amartinez/Desktop/PhD/Charlas/Brno_GC_workshop/imagenes/REL_arches_gns.png',bbox_inches = 'tight', transparent = True)
     
                 if save_reg is not None:
-                    with open(save_reg + f'cluster_{i}.reg', 'w') as f:
-                        if coor1 =='l':
-                          f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=cyan dashlist=8 3 width=4 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'galactic'+'\n')
-                          f.close
-                        else:
-                            f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=cyan dashlist=8 3 width=4 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'fk5'+'\n')
-                            f.close
-                    for j in range(len((Ra[colores_index[i]]))):
-                                   with open(save_reg + f'cluster_{i}.reg', 'a') as f:
-                                       f.write('\n'.join(('point(%s,%s) # point=x'%(Ra[colores_index[i]][j],Dec[colores_index[i]][j]),'\n')))  
-                                   f.close
+                    
+                    reg_colo = ['green', 'cyan', 'violet', 'red', 'blue']
+                    
+                    tabC= Table(
+                        [Ra[colores_index[i]],
+                         Dec[colores_index[i]],
+                         X[:, 0][colores_index[i]],
+                         X[:, 1][colores_index[i]]],
+                        names=(pixel_x, pixel_y, pmx, pmy)
+                    )
+                    region_vectors(
+                        table=tabC,
+                        ra_col = pixel_x, 
+                        dec_col= pixel_y,
+                        pmra_col= pmx,
+                        pmdec_col= pmy,
+                        name= f'clus_{i}',
+                        save_in = save_reg,
+                        color=f'{reg_colo[i]}',
+                        wcs='fk5',
+                        # wcs='physical',
+                        scale=1,
+                        width = 5
+                    )
+                    # with open(save_reg + f'cluster_{i}.reg', 'w') as f:
+                    #     if coor1 =='l':
+                    #       f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=cyan dashlist=8 3 width=4 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'galactic'+'\n')
+                    #       f.close
+                    #     else:
+                    #         f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=cyan dashlist=8 3 width=4 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'fk5'+'\n')
+                    #         f.close
+                    # for j in range(len((Ra[colores_index[i]]))):
+                    #                with open(save_reg + f'cluster_{i}.reg', 'a') as f:
+                    #                    f.write('\n'.join(('point(%s,%s) # point=x'%(Ra[colores_index[i]][j],Dec[colores_index[i]][j]),'\n')))  
+                    #                f.close
     
             
-                # x_ticks = np.round(ax[1].get_xticks(), 2)
-                # ax[1].set_xticks(np.unique(x_ticks))
-    
-                # y_ticks = np.round(ax[1].get_yticks(), 2)
-                # # ax[1].set_yticklabels(y_ticks, rotation=90)
-                # ax[1].set_yticks(y_ticks)
+               
                
     # =============================================================================
     #             p2d = np.array([Ra[colores_index[i]],Dec[colores_index[i]]]).T
